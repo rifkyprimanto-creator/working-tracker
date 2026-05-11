@@ -1,0 +1,771 @@
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+
+<style>
+:root{
+  --bg0:#f4f6fa;--bg1:#ffffff;--bg2:#f0f2f7;--bg3:#e4e8f0;
+  --tx1:#0f1117;--tx2:#3d4a5c;--tx3:#7a8699;
+  --br:#dde2ec;--br2:#c5cdd9;
+  --blue-bg:#e6f1fb;--blue:#185fa5;--blue-tx:#0c447c;
+  --green-bg:#eaf3de;--green:#3b6d11;--green-tx:#27500a;
+  --red-bg:#fcebeb;--red:#a32d2d;--red-tx:#791f1f;
+  --amber-bg:#faeeda;--amber:#854f0b;--amber-tx:#633806;
+  --purple-bg:#eeedfe;--purple:#534ab7;--purple-tx:#3c3489;
+  --teal-bg:#e1f5ee;--teal:#0f6e56;--teal-tx:#085041;
+}
+.dark{
+  --bg0:#070b15;--bg1:#0d1424;--bg2:#111c30;--bg3:#1a2540;
+  --tx1:#eef2ff;--tx2:#94a3b8;--tx3:#475569;
+  --br:#1e2d4a;--br2:#2d3f5a;
+  --blue-bg:#0c1e35;--blue:#378add;--blue-tx:#85b7eb;
+  --green-bg:#0a1f07;--green:#639922;--green-tx:#c0dd97;
+  --red-bg:#1f0808;--red:#e24b4a;--red-tx:#f09595;
+  --amber-bg:#1e0f00;--amber:#ef9f27;--amber-tx:#fac775;
+  --purple-bg:#1a1840;--purple:#7f77dd;--purple-tx:#afa9ec;
+  --teal-bg:#041e17;--teal:#1d9e75;--teal-tx:#9fe1cb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,'Inter',sans-serif);background:var(--bg0);color:var(--tx1);font-size:13px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg1);border-bottom:0.5px solid var(--br);gap:8px;flex-wrap:wrap}
+.topbar-l{display:flex;align-items:center;gap:10px}
+.logo{width:32px;height:32px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.app-name{font-size:14px;font-weight:500;color:var(--tx1)}
+.app-sub{font-size:10px;color:var(--tx3)}
+.topbar-r{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:5px;font-size:10px;background:var(--bg2);border:0.5px solid var(--br);border-radius:20px;padding:4px 10px;color:var(--tx2)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:#639922}.dot-warn{background:#854f0b}.dot-err{background:#a32d2d;animation:blink .7s infinite}
+.theme-btn{background:var(--bg2);border:0.5px solid var(--br);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:10px;color:var(--tx2);display:flex;align-items:center;gap:4px}
+.theme-btn:hover{border-color:var(--br2)}
+
+.tabs{display:flex;background:var(--bg1);border-bottom:0.5px solid var(--br);padding:0 16px;gap:2px}
+.tab{padding:9px 13px;font-size:11px;font-weight:500;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.on){color:var(--tx2)}
+
+.view{display:none;padding:14px;background:var(--bg0)}
+.view.on{display:block}
+
+.card{background:var(--bg1);border:0.5px solid var(--br);border-radius:10px;padding:13px;margin-bottom:10px}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pt{font-size:12px;font-weight:500;color:var(--tx2);display:flex;align-items:center;gap:5px}
+.pn{font-size:10px;color:var(--tx3)}
+.lbl{font-size:10px;color:var(--tx3);margin-bottom:4px}
+.inp{width:100%;background:var(--bg2);border:0.5px solid var(--br);border-radius:7px;color:var(--tx1);font-size:11px;padding:7px 9px;margin-bottom:7px}
+.inp::placeholder{color:var(--tx3)}
+.inp:focus{outline:none;border-color:var(--blue)}
+
+.mc4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.mc5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.mc{background:var(--bg2);border-radius:8px;padding:10px 11px}
+.mc-lbl{font-size:10px;color:var(--tx3);margin-bottom:2px}
+.mc-val{font-size:19px;font-weight:500;color:var(--tx1)}
+.v-g{color:var(--green)}.v-r{color:var(--red)}.v-y{color:var(--amber)}.v-b{color:var(--blue)}.v-p{color:var(--purple)}.v-t{color:var(--teal)}
+
+.badge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.b-on{background:var(--green-bg);color:var(--green-tx)}
+.b-off{background:var(--red-bg);color:var(--red-tx)}
+.b-oob{background:var(--amber-bg);color:var(--amber-tx)}
+.b-hw{background:var(--purple-bg);color:var(--purple-tx)}
+.b-blue{background:var(--blue-bg);color:var(--blue-tx)}
+.b-teal{background:var(--teal-bg);color:var(--teal-tx)}
+
+.btn{padding:7px 11px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:0.5px solid var(--br2);background:var(--bg2);color:var(--tx1);display:inline-flex;align-items:center;gap:4px}
+.btn:hover{background:var(--bg3)}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-p:hover{opacity:.9}
+.btn-d{background:var(--red-bg);color:var(--red-tx);border-color:var(--red)}
+.btn-s{background:var(--green-bg);color:var(--green-tx);border-color:var(--green)}
+.btn-w{background:var(--amber-bg);color:var(--amber-tx);border-color:var(--amber)}
+.btn-pu{background:var(--purple-bg);color:var(--purple-tx);border-color:var(--purple)}
+.btn-bl{width:100%;justify-content:center;margin-bottom:7px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}
+.tbl th{padding:7px 9px;text-align:left;color:var(--tx3);font-weight:500;border-bottom:0.5px solid var(--br);background:var(--bg2);white-space:nowrap}
+.tbl td{padding:7px 9px;border-bottom:0.5px solid var(--br);color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.tbl tr:hover td{background:var(--bg2)}
+.tbl tr.row-off td{background:var(--red-bg)}
+.tbl tr.row-oob td{background:var(--amber-bg)}
+.tbl tr.row-hw td{background:var(--purple-bg)}
+
+.alert-banner{border-radius:9px;padding:10px 13px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;border:0.5px solid}
+.alert-banner.hidden{display:none}
+.ab-err{background:var(--red-bg);border-color:var(--red)}
+.ab-warn{background:var(--amber-bg);border-color:var(--amber)}
+.ab-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.abi-err{background:var(--red);color:#fff}
+.abi-warn{background:var(--amber);color:#fff}
+.ab-title{font-size:11px;font-weight:500}
+.ab-err .ab-title{color:var(--red-tx)}
+.ab-warn .ab-title{color:var(--amber-tx)}
+.ab-sub{font-size:10px;margin-top:2px}
+.ab-err .ab-sub{color:var(--red)}
+.ab-warn .ab-sub{color:var(--amber)}
+
+.source-chip{display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:500}
+.sw-chip{background:var(--blue-bg);color:var(--blue-tx)}
+.hw-chip{background:var(--purple-bg);color:var(--purple-tx)}
+.both-chip{background:var(--teal-bg);color:var(--teal-tx)}
+
+.layer-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.layer-card{border-radius:9px;padding:11px 13px;border:0.5px solid}
+.lc-sw{background:var(--blue-bg);border-color:var(--blue)}
+.lc-hw{background:var(--purple-bg);border-color:var(--purple)}
+.lc-title{font-size:11px;font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.lc-sw .lc-title{color:var(--blue-tx)}
+.lc-hw .lc-title{color:var(--purple-tx)}
+.lc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.lc-key{font-size:10px;color:var(--tx3)}
+.lc-val{font-size:10px;font-family:monospace;font-weight:500}
+
+.alog{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto}
+.li{padding:6px 8px;border-radius:0;border-left:2px solid}
+.li.l-theft{background:var(--red-bg);border-color:var(--red)}
+.li.l-oob{background:var(--amber-bg);border-color:var(--amber)}
+.li.l-hw{background:var(--purple-bg);border-color:var(--purple)}
+.li.l-on{background:var(--green-bg);border-color:var(--green)}
+.li.l-info{background:var(--blue-bg);border-color:var(--blue)}
+.al-m{font-size:11px;color:var(--tx1)}
+.al-s{font-size:9px;color:var(--tx3);margin-top:1px}
+.al-t{font-size:9px;color:var(--tx3)}
+.al-tag{font-size:8px;padding:1px 5px;border-radius:3px;display:inline-block;margin-top:2px}
+
+.map-wrap{height:300px;border-radius:9px;border:0.5px solid var(--br);overflow:hidden;margin-bottom:10px}
+#map-main{height:100%;width:100%}
+
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:10px;padding-bottom:14px;position:relative}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid}
+.tl-dot-on{background:var(--green-bg);border-color:var(--green)}
+.tl-dot-off{background:var(--red-bg);border-color:var(--red)}
+.tl-dot-hw{background:var(--purple-bg);border-color:var(--purple)}
+.tl-dot-warn{background:var(--amber-bg);border-color:var(--amber)}
+.tl-line{position:absolute;left:4px;top:13px;bottom:0;width:1px;background:var(--br)}
+.tl-body{flex:1}
+.tl-title{font-size:11px;font-weight:500;color:var(--tx1)}
+.tl-sub{font-size:10px;color:var(--tx3);margin-top:1px}
+.tl-time{font-size:9px;color:var(--tx3);margin-top:2px}
+
+.sim-panel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.sb{padding:8px;border-radius:7px;font-size:10px;cursor:pointer;border:0.5px solid;text-align:center;font-weight:500;display:flex;align-items:center;justify-content:center;gap:4px}
+.sb:hover{opacity:.8}
+.sb-off{background:var(--red-bg);border-color:var(--red);color:var(--red-tx)}
+.sb-oob{background:var(--amber-bg);border-color:var(--amber);color:var(--amber-tx)}
+.sb-on{background:var(--green-bg);border-color:var(--green);color:var(--green-tx)}
+.sb-ret{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-tx)}
+.sb-hw-off{background:var(--purple-bg);border-color:var(--purple);color:var(--purple-tx)}
+.sb-hw-far{background:var(--amber-bg);border-color:var(--amber);color:var(--amber-tx)}
+
+.scenario-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.scen{background:var(--bg1);border:0.5px solid var(--br);border-radius:9px;padding:11px;cursor:pointer;transition:border-color .15s}
+.scen:hover{border-color:var(--blue)}
+.scen-icon{font-size:20px;margin-bottom:5px}
+.scen-title{font-size:11px;font-weight:500;color:var(--tx1);margin-bottom:3px}
+.scen-desc{font-size:10px;color:var(--tx3);line-height:1.4}
+
+.del-confirm{display:none;background:var(--red-bg);border:0.5px solid var(--red);border-radius:7px;padding:9px;margin-top:6px}
+.del-confirm.show{display:block}
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes fadein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fadein .2s ease}
+.mono{font-family:monospace}
+.empty{font-size:11px;color:var(--tx3);text-align:center;padding:12px}
+</style>
+
+<div id="root" class="dark">
+
+<div class="topbar">
+  <div class="topbar-l">
+    <div class="logo"><i class="ti ti-satellite" aria-hidden="true"></i></div>
+    <div>
+      <div class="app-name">Dual-Layer Asset Tracker</div>
+      <div class="app-sub">Software agent + Hardware GPS — Find My style recovery</div>
+    </div>
+  </div>
+  <div class="topbar-r">
+    <div class="pill"><div class="dot dot-ok" id="sys-dot"></div><span id="sys-txt">All systems nominal</span></div>
+    <button class="theme-btn" onclick="toggleTheme()" id="tbtn"><i class="ti ti-sun" id="ticon" aria-hidden="true"></i><span id="tlbl">Light</span></button>
+    <span style="font-size:10px;color:var(--tx3)" id="clk"></span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" id="t-dashboard" onclick="sw('dashboard')"><i class="ti ti-layout-dashboard" aria-hidden="true" style="font-size:13px"></i> Dashboard</div>
+  <div class="tab" id="t-map" onclick="sw('map')"><i class="ti ti-map" aria-hidden="true" style="font-size:13px"></i> Live Map</div>
+  <div class="tab" id="t-timeline" onclick="sw('timeline')"><i class="ti ti-timeline" aria-hidden="true" style="font-size:13px"></i> Timeline</div>
+  <div class="tab" id="t-sim" onclick="sw('sim')"><i class="ti ti-player-play" aria-hidden="true" style="font-size:13px"></i> Simulator</div>
+  <div class="tab" id="t-howto" onclick="sw('howto')"><i class="ti ti-info-circle" aria-hidden="true" style="font-size:13px"></i> How it works</div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="view on" id="view-dashboard">
+  <div id="main-banner" class="alert-banner hidden">
+    <div class="ab-icon" id="ab-icon"></div>
+    <div><div class="ab-title" id="ab-title"></div><div class="ab-sub" id="ab-sub"></div></div>
+  </div>
+
+  <div class="mc5">
+    <div class="mc"><div class="mc-lbl">Total assets</div><div class="mc-val v-b" id="m-tot">0</div></div>
+    <div class="mc"><div class="mc-lbl">SW + HW online</div><div class="mc-val v-g" id="m-full">0</div></div>
+    <div class="mc"><div class="mc-lbl">SW off — HW active</div><div class="mc-val v-p" id="m-hwonly">0</div></div>
+    <div class="mc"><div class="mc-lbl">Both offline</div><div class="mc-val v-r" id="m-both-off">0</div></div>
+    <div class="mc"><div class="mc-lbl">Out of bounds</div><div class="mc-val v-y" id="m-oob">0</div></div>
+  </div>
+
+  <div class="card" style="overflow-x:auto">
+    <div class="ph">
+      <div class="pt"><i class="ti ti-table" aria-hidden="true" style="font-size:13px"></i> Asset dual-layer status</div>
+      <span class="pn" id="tbl-time"></span>
+    </div>
+    <table class="tbl">
+      <thead><tr>
+        <th style="width:95px">Asset ID</th>
+        <th style="width:80px">SW status</th>
+        <th style="width:80px">HW tracker</th>
+        <th style="width:75px">Threat level</th>
+        <th style="width:100px">SW location</th>
+        <th style="width:100px">HW location</th>
+        <th style="width:65px">HW deviasi</th>
+        <th style="width:55px">HW bat</th>
+        <th style="width:95px">Aksi</th>
+      </tr></thead>
+      <tbody id="main-tbody"></tbody>
+    </table>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="card">
+      <div class="ph" style="margin-bottom:8px">
+        <div class="pt"><i class="ti ti-bell" aria-hidden="true" style="font-size:13px"></i> Alert log</div>
+        <span class="pn" id="log-ct">0</span>
+      </div>
+      <div class="alog" id="alog"><div class="empty">No alerts yet</div></div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin-bottom:8px">
+        <div class="pt"><i class="ti ti-info-circle" aria-hidden="true" style="font-size:13px"></i> Layer legend</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--blue-bg);border:0.5px solid var(--blue);border-radius:7px;padding:9px">
+          <div style="font-size:11px;font-weight:500;color:var(--blue-tx);margin-bottom:4px;display:flex;align-items:center;gap:5px"><i class="ti ti-device-mobile" aria-hidden="true"></i> Layer 1 — Software agent</div>
+          <div style="font-size:10px;color:var(--tx3)">App berjalan di device (SEUIC, laptop, Android). Kirim GPS via internet. Mati jika device dimatikan atau SIM dicabut.</div>
+        </div>
+        <div style="background:var(--purple-bg);border:0.5px solid var(--purple);border-radius:7px;padding:9px">
+          <div style="font-size:11px;font-weight:500;color:var(--purple-tx);margin-bottom:4px;display:flex;align-items:center;gap:5px"><i class="ti ti-cpu" aria-hidden="true"></i> Layer 2 — Hardware tracker</div>
+          <div style="font-size:10px;color:var(--tx3)">Teltonika FMB920 / Concox GT06 tersembunyi di dalam aset. SIM & baterai independen. Tetap aktif meski device utama mati.</div>
+        </div>
+        <div style="background:var(--red-bg);border:0.5px solid var(--red);border-radius:7px;padding:9px">
+          <div style="font-size:11px;font-weight:500;color:var(--red-tx);margin-bottom:4px;display:flex;align-items:center;gap:5px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> SW off + HW aktif = THEFT</div>
+          <div style="font-size:10px;color:var(--tx3)">Jika software mati tapi hardware masih kirim lokasi — kemungkinan besar device sedang dicuri. HW tetap melacak sampai baterainya habis.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAP ═══ -->
+<div class="view" id="view-map">
+  <div class="ph" style="margin-bottom:8px">
+    <div class="pt"><i class="ti ti-map-pin" aria-hidden="true" style="font-size:13px"></i> Live map — all assets</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="source-chip sw-chip"><i class="ti ti-circle" aria-hidden="true" style="font-size:10px"></i> SW</span>
+      <span class="source-chip hw-chip"><i class="ti ti-cpu" aria-hidden="true" style="font-size:10px"></i> HW</span>
+      <select class="inp" id="map-filter" style="width:120px;margin-bottom:0;font-size:10px" onchange="refreshMap()">
+        <option value="all">Semua asset</option>
+      </select>
+    </div>
+  </div>
+  <div class="map-wrap"><div id="map-main"></div></div>
+  <div id="map-detail" style="font-size:11px;color:var(--tx3);text-align:center">Klik marker di peta untuk detail</div>
+</div>
+
+<!-- ═══ TIMELINE ═══ -->
+<div class="view" id="view-timeline">
+  <div class="ph" style="margin-bottom:8px">
+    <div class="pt"><i class="ti ti-timeline" aria-hidden="true" style="font-size:13px"></i> Event timeline</div>
+    <select class="inp" id="tl-filter" style="width:140px;margin-bottom:0;font-size:10px" onchange="renderTimeline()">
+      <option value="all">Semua asset</option>
+    </select>
+  </div>
+  <div class="card" id="tl-wrap">
+    <div class="empty">Belum ada event</div>
+  </div>
+</div>
+
+<!-- ═══ SIMULATOR ═══ -->
+<div class="view" id="view-sim">
+  <div class="scenario-strip">
+    <div class="scen" onclick="runScenario('stolen')">
+      <div class="scen-icon"><i class="ti ti-device-mobile-off" style="font-size:20px;color:var(--red)" aria-hidden="true"></i></div>
+      <div class="scen-title">Device dicuri + dimatikan</div>
+      <div class="scen-desc">SW mati, HW tracker tetap aktif dan melacak pergerakan pencuri</div>
+    </div>
+    <div class="scen" onclick="runScenario('findmy')">
+      <div class="scen-icon"><i class="ti ti-map-search" style="font-size:20px;color:var(--purple)" aria-hidden="true"></i></div>
+      <div class="scen-title">Find My simulation</div>
+      <div class="scen-desc">SW offline, HW kirim koordinat terbaru — mirip Apple Find My</div>
+    </div>
+    <div class="scen" onclick="runScenario('both_lost')">
+      <div class="scen-icon"><i class="ti ti-alert-triangle" style="font-size:20px;color:var(--amber)" aria-hidden="true"></i></div>
+      <div class="scen-title">Keduanya hilang</div>
+      <div class="scen-desc">SW + HW mati. Dashboard tampilkan last known location dari kedua layer</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="card">
+      <div class="ph" style="margin-bottom:8px">
+        <div class="pt"><i class="ti ti-settings" aria-hidden="true" style="font-size:13px"></i> Manual controls</div>
+      </div>
+      <div class="lbl">Target asset</div>
+      <select class="inp" id="sim-sel" onchange="onSimChange()"></select>
+
+      <div style="margin-bottom:8px">
+        <div class="lbl" style="font-weight:500;color:var(--blue-tx);margin-bottom:5px"><i class="ti ti-device-mobile" aria-hidden="true"></i> Software layer</div>
+        <div class="sim-panel">
+          <div class="sb sb-off" onclick="simSW('kill')"><i class="ti ti-power" aria-hidden="true"></i> Matikan SW</div>
+          <div class="sb sb-oob" onclick="simSW('oob')"><i class="ti ti-arrow-bar-right" aria-hidden="true"></i> SW keluar zona</div>
+          <div class="sb sb-on" onclick="simSW('wake')"><i class="ti ti-refresh" aria-hidden="true"></i> Hidupkan SW</div>
+          <div class="sb sb-ret" onclick="simSW('home')"><i class="ti ti-home" aria-hidden="true"></i> SW ke home</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="lbl" style="font-weight:500;color:var(--purple-tx);margin-bottom:5px"><i class="ti ti-cpu" aria-hidden="true"></i> Hardware tracker layer</div>
+        <div class="sim-panel">
+          <div class="sb sb-hw-off" onclick="simHW('kill')"><i class="ti ti-battery-off" aria-hidden="true"></i> HW baterai habis</div>
+          <div class="sb sb-hw-far" onclick="simHW('move')"><i class="ti ti-run" aria-hidden="true"></i> HW bergerak jauh</div>
+          <div class="sb sb-on" onclick="simHW('wake')"><i class="ti ti-battery-charging" aria-hidden="true"></i> HW aktif kembali</div>
+          <div class="sb sb-ret" onclick="simHW('home')"><i class="ti ti-home" aria-hidden="true"></i> HW ke home</div>
+        </div>
+      </div>
+
+      <div id="del-box" class="del-confirm">
+        <div style="font-size:11px;color:var(--red-tx);margin-bottom:7px">Hapus asset dari sistem?</div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-d" style="flex:1;justify-content:center;padding:6px" onclick="confirmDel()"><i class="ti ti-trash" aria-hidden="true"></i> Hapus</button>
+          <button class="btn" style="flex:1;justify-content:center;padding:6px" onclick="cancelDel()">Batal</button>
+        </div>
+      </div>
+      <div class="sb sb-off" onclick="askDel()" style="margin-top:6px"><i class="ti ti-trash" aria-hidden="true"></i> Hapus asset</div>
+    </div>
+
+    <div class="card">
+      <div class="ph" style="margin-bottom:8px">
+        <div class="pt"><i class="ti ti-eye" aria-hidden="true" style="font-size:13px"></i> Asset detail</div>
+      </div>
+      <div id="sim-detail">
+        <div class="empty">Pilih asset dari dropdown</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<div class="view" id="view-howto">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div class="card">
+      <div class="ph" style="margin-bottom:8px"><div class="pt"><i class="ti ti-device-mobile" aria-hidden="true" style="font-size:13px"></i> Layer 1 — Software agent</div></div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0">1</div><div><div style="font-size:11px;font-weight:500;color:var(--tx1)">App berjalan di background</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">Flutter/React Native kirim GPS tiap 30 detik via GPRS/WiFi ke Supabase</div></div></div>
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0">2</div><div><div style="font-size:11px;font-weight:500;color:var(--tx1)">Heartbeat monitoring</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">Jika tidak ada data &gt;15 detik → trigger alert SW offline</div></div></div>
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0">3</div><div><div style="font-size:11px;font-weight:500;color:var(--tx1)">Kelemahan</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">Mati jika device dimatikan, SIM dicabut, atau baterai habis</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ph" style="margin-bottom:8px"><div class="pt"><i class="ti ti-cpu" aria-hidden="true" style="font-size:13px"></i> Layer 2 — Hardware tracker</div></div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0">1</div><div><div style="font-size:11px;font-weight:500;color:var(--tx1)">Hardware independen</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">Teltonika FMB920 / Concox GT06 tersembunyi di bodi aset, SIM & baterai sendiri</div></div></div>
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0">2</div><div><div style="font-size:11px;font-weight:500;color:var(--tx1)">Kirim via GPRS/LTE mandiri</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">Tidak bergantung pada device utama. Tetap tracking meski SEUIC dimatikan</div></div></div>
+        <div style="display:flex;gap:8px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0">3</div><div><div style="font-size:11px;font-weight:500;color:var(--tx1)">HW baterai 500–5000 mAh</div><div style="font-size:10px;color:var(--tx3);margin-top:1px">Tergantung model, bisa 1–60 hari standby. Ideal tersembunyi di slot baterai cadangan</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ph" style="margin-bottom:10px"><div class="pt"><i class="ti ti-git-merge" aria-hidden="true" style="font-size:13px"></i> Decision matrix — kapan dashboard merespons</div></div>
+    <table class="tbl">
+      <thead><tr>
+        <th style="width:100px">SW status</th>
+        <th style="width:100px">HW status</th>
+        <th style="width:120px">Interpretasi</th>
+        <th>Respons dashboard</th>
+      </tr></thead>
+      <tbody>
+        <tr><td><span class="badge b-on">SW online</span></td><td><span class="badge b-hw">HW online</span></td><td><span class="badge b-teal">Normal</span></td><td style="font-size:10px;color:var(--tx2)">Tampilkan SW location (lebih akurat). HW sebagai backup</td></tr>
+        <tr class="row-off"><td><span class="badge b-off">SW offline</span></td><td><span class="badge b-hw">HW online</span></td><td><span class="badge b-off">Possible theft</span></td><td style="font-size:10px;color:var(--tx2)">ALERT MERAH. Tampilkan HW location real-time. Log last SW location</td></tr>
+        <tr class="row-oob"><td><span class="badge b-on">SW online</span></td><td><span class="badge b-hw">HW online</span></td><td><span class="badge b-oob">OOB detected</span></td><td style="font-size:10px;color:var(--tx2)">ALERT KUNING. Bandingkan SW vs HW coords — konfirmasi pergerakan nyata</td></tr>
+        <tr><td><span class="badge b-off">SW offline</span></td><td><span class="badge b-off">HW offline</span></td><td><span class="badge b-off">Both lost</span></td><td style="font-size:10px;color:var(--tx2)">ALERT KRITIS. Tampilkan last known dari kedua layer + timestamp</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:0">
+    <div class="ph" style="margin-bottom:8px"><div class="pt"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:13px"></i> Recommended hardware</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:var(--bg2);border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:500;color:var(--tx1);margin-bottom:4px">Teltonika FMB920</div>
+        <div style="font-size:10px;color:var(--tx3);line-height:1.5">GPS+GLONASS, 4G LTE, internal bat 170mAh, IP41. Ideal untuk kendaraan. ~Rp 900rb</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:500;color:var(--tx1);margin-bottom:4px">Concox GT06N</div>
+        <div style="font-size:10px;color:var(--tx3);line-height:1.5">GPS 2G, ukuran kecil, baterai 200mAh. Entry-level, tersedia di Tokopedia. ~Rp 350rb</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:500;color:var(--tx1);margin-bottom:4px">Apple AirTag</div>
+        <div style="font-size:10px;color:var(--tx3);line-height:1.5">UWB+BLE, manfaatkan 1B+ iPhone sebagai relay. Baterai CR2032, 1 tahun. ~Rp 450rb</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let isDark=true, leafMap=null, mapMarkers=[];
+let HB_SW=15;
+
+const HAV=(la1,lo1,la2,lo2)=>{const R=6371000,r=x=>x*Math.PI/180,dl=r(la2-la1),dn=r(lo2-lo1),a=Math.sin(dl/2)**2+Math.cos(r(la1))*Math.cos(r(la2))*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))};
+const fmD=m=>m<1000?Math.round(m)+'m':(m/1000).toFixed(2)+' km';
+const fmC=v=>typeof v==='number'?v.toFixed(6):'—';
+const fmT=()=>new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+let assets=[
+  {id:'SEUIC-09',name:'Android PDA',coord:'Budi Santoso',
+   regLat:-6.253266,regLng:106.864660,
+   swLat:-6.253266,swLng:106.864660,swStatus:'online',swLastSeen:Date.now(),swHb:Array(8).fill(1),
+   hwLat:-6.253266,hwLng:106.864660,hwStatus:'online',hwLastSeen:Date.now(),hwBat:87},
+  {id:'SEUIC-124',name:'Survey Camera',coord:'Dewi Rahayu',
+   regLat:-6.256100,regLng:106.868200,
+   swLat:-6.256100,swLng:106.868200,swStatus:'online',swLastSeen:Date.now(),swHb:Array(8).fill(1),
+   hwLat:-6.256100,hwLng:106.868200,hwStatus:'online',hwLastSeen:Date.now(),hwBat:63},
+  {id:'DRONE-X3',name:'Survey Drone',coord:'Sari W.',
+   regLat:-6.258900,regLng:106.872300,
+   swLat:-6.258900,swLng:106.872300,swStatus:'online',swLastSeen:Date.now(),swHb:Array(8).fill(1),
+   hwLat:-6.258900,hwLng:106.872300,hwStatus:'online',hwLastSeen:Date.now(),hwBat:45},
+  {id:'GEN-B02',name:'Generator B',coord:'Hendra W.',
+   regLat:-6.245600,regLng:106.858900,
+   swLat:-6.245600,swLng:106.858900,swStatus:'online',swLastSeen:Date.now(),swHb:Array(8).fill(1),
+   hwLat:-6.245600,hwLng:106.858900,hwStatus:'online',hwLastSeen:Date.now(),hwBat:31},
+];
+let evLog=[];
+let tlEvents=[];
+
+function swStatusOf(a){
+  const age=(Date.now()-a.swLastSeen)/1000;
+  if(a.swStatus==='offline'||age>HB_SW)return'offline';
+  if(HAV(a.regLat,a.regLng,a.swLat,a.swLng)>100)return'oob';
+  return'online';
+}
+function hwStatusOf(a){
+  if(a.hwStatus==='offline')return'offline';
+  return'online';
+}
+function threatLevel(a){
+  const sw=swStatusOf(a),hw=hwStatusOf(a);
+  if(sw==='offline'&&hw==='online')return'theft';
+  if(sw==='offline'&&hw==='offline')return'lost';
+  if(sw==='oob'||hw==='online'&&HAV(a.regLat,a.regLng,a.hwLat,a.hwLng)>100)return'oob';
+  return'safe';
+}
+
+function pushLog(type,msg,sub){
+  evLog.unshift({type,msg,sub,t:fmT()});
+  if(evLog.length>60)evLog.pop();
+  tlEvents.unshift({type,msg,sub,t:fmT()});
+  if(tlEvents.length>80)tlEvents.pop();
+}
+
+function renderLog(){
+  const el=document.getElementById('alog');
+  document.getElementById('log-ct').textContent=evLog.length;
+  if(!evLog.length){el.innerHTML='<div class="empty">No alerts yet</div>';return;}
+  el.innerHTML=evLog.map(l=>{
+    const tagMap={theft:'possible theft',lost:'both offline',oob:'out of bounds',on:'online',info:'info',hw:'hw active'};
+    const cMap={theft:'l-theft',lost:'l-theft',oob:'l-oob',on:'l-on',info:'l-info',hw:'l-hw'};
+    return`<div class="li ${cMap[l.type]||'l-info'} fi">
+      <div style="display:flex;justify-content:space-between"><span class="al-m">${l.msg}</span><span class="al-t">${l.t}</span></div>
+      <div class="al-s">${l.sub}</div>
+      <span class="al-tag" style="background:var(--${l.type==='theft'||l.type==='lost'?'red':l.type==='oob'?'amber':l.type==='hw'?'purple':'green'}-bg);color:var(--${l.type==='theft'||l.type==='lost'?'red':l.type==='oob'?'amber':l.type==='hw'?'purple':'green'}-tx)">${tagMap[l.type]||l.type}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMetrics(){
+  const sw_on=assets.filter(a=>swStatusOf(a)==='online').length;
+  const full=assets.filter(a=>swStatusOf(a)==='online'&&hwStatusOf(a)==='online').length;
+  const hwonly=assets.filter(a=>swStatusOf(a)==='offline'&&hwStatusOf(a)==='online').length;
+  const both_off=assets.filter(a=>swStatusOf(a)==='offline'&&hwStatusOf(a)==='offline').length;
+  const oob=assets.filter(a=>threatLevel(a)==='oob').length;
+  document.getElementById('m-tot').textContent=assets.length;
+  document.getElementById('m-full').textContent=full;
+  document.getElementById('m-hwonly').textContent=hwonly;
+  document.getElementById('m-both-off').textContent=both_off;
+  document.getElementById('m-oob').textContent=oob;
+  document.getElementById('tbl-time').textContent='Updated '+fmT();
+
+  const sd=document.getElementById('sys-dot'),st=document.getElementById('sys-txt');
+  if(hwonly>0){sd.className='dot dot-err';st.textContent=hwonly+' possible theft — HW still tracking';}
+  else if(both_off>0){sd.className='dot dot-err';st.textContent=both_off+' assets — both layers offline';}
+  else if(oob>0){sd.className='dot dot-warn';st.textContent=oob+' asset out of bounds';}
+  else{sd.className='dot dot-ok';st.textContent='All systems nominal';}
+
+  const bn=document.getElementById('main-banner');
+  const ti=document.getElementById('ab-title'),ts=document.getElementById('ab-sub'),bi=document.getElementById('ab-icon');
+  const thefts=assets.filter(a=>threatLevel(a)==='theft');
+  const losts=assets.filter(a=>threatLevel(a)==='lost');
+  if(thefts.length){
+    bn.className='alert-banner ab-err fi';
+    bi.className='ab-icon abi-err';bi.innerHTML='<i class="ti ti-shield-off" style="font-size:14px" aria-hidden="true"></i>';
+    ti.textContent='Possible theft detected — hardware tracker still active';
+    ts.textContent=thefts.map(a=>`${a.id}: SW offline, HW at ${fmC(a.hwLat)}, ${fmC(a.hwLng)}`).join(' | ');
+  }else if(losts.length){
+    bn.className='alert-banner ab-err fi';
+    bi.className='ab-icon abi-err';bi.innerHTML='<i class="ti ti-alert-triangle" style="font-size:14px" aria-hidden="true"></i>';
+    ti.textContent='Critical — both layers offline';
+    ts.textContent=losts.map(a=>`${a.id}: last known SW ${fmC(a.swLat)}, ${fmC(a.swLng)}`).join(' | ');
+  }else if(oob>0){
+    bn.className='alert-banner ab-warn fi';
+    bi.className='ab-icon abi-warn';bi.innerHTML='<i class="ti ti-map-pin-exclamation" style="font-size:14px" aria-hidden="true"></i>';
+    ti.textContent='Geofence breach detected';
+    ts.textContent=assets.filter(a=>threatLevel(a)==='oob').map(a=>`${a.id}: ${fmD(HAV(a.regLat,a.regLng,a.swLat,a.swLng))}`).join(' | ');
+  }else{bn.className='alert-banner hidden';}
+}
+
+function renderTable(){
+  const tbody=document.getElementById('main-tbody');
+  tbody.innerHTML=assets.map(a=>{
+    const sw=swStatusOf(a),hw=hwStatusOf(a),thr=threatLevel(a);
+    const hwDist=HAV(a.regLat,a.regLng,a.hwLat,a.hwLng);
+    const rc=thr==='theft'?'row-off':thr==='lost'?'row-off':thr==='oob'?'row-oob':hw==='online'&&sw==='offline'?'row-hw':'';
+    const swBadge=sw==='online'?'<span class="badge b-on"><i class="ti ti-circle" style="font-size:8px" aria-hidden="true"></i> Online</span>':
+      sw==='oob'?'<span class="badge b-oob"><i class="ti ti-alert-circle" style="font-size:8px" aria-hidden="true"></i> OOB</span>':
+      '<span class="badge b-off"><i class="ti ti-circle-off" style="font-size:8px" aria-hidden="true"></i> Offline</span>';
+    const hwBadge=hw==='online'?'<span class="badge b-hw"><i class="ti ti-cpu" style="font-size:8px" aria-hidden="true"></i> Active</span>':
+      '<span class="badge b-off"><i class="ti ti-battery-off" style="font-size:8px" aria-hidden="true"></i> Offline</span>';
+    const thrBadge=thr==='safe'?'<span class="badge b-teal"><i class="ti ti-shield-check" style="font-size:8px" aria-hidden="true"></i> Safe</span>':
+      thr==='theft'?'<span class="badge b-off"><i class="ti ti-shield-off" style="font-size:8px" aria-hidden="true"></i> Theft</span>':
+      thr==='lost'?'<span class="badge b-off"><i class="ti ti-alert-triangle" style="font-size:8px" aria-hidden="true"></i> Lost</span>':
+      '<span class="badge b-oob"><i class="ti ti-map-pin-exclamation" style="font-size:8px" aria-hidden="true"></i> OOB</span>';
+    const batColor=a.hwBat>50?'var(--green)':a.hwBat>20?'var(--amber)':'var(--red)';
+    return`<tr class="${rc}">
+      <td><span class="mono" style="color:var(--blue);font-size:10px;font-weight:500">${a.id}</span><br><span style="font-size:9px;color:var(--tx3)">${a.name}</span></td>
+      <td>${swBadge}</td>
+      <td>${hwBadge}</td>
+      <td>${thrBadge}</td>
+      <td style="font-size:9px;font-family:monospace;color:var(--tx3)">${fmC(a.swLat)},<br>${fmC(a.swLng)}</td>
+      <td style="font-size:9px;font-family:monospace;color:${hw==='online'?'var(--purple-tx)':'var(--tx3)'}">${hw==='online'?fmC(a.hwLat)+'<br>'+fmC(a.hwLng):'last: '+fmC(a.hwLat)+'<br>'+fmC(a.hwLng)}</td>
+      <td><span style="color:${hwDist>100?'var(--red)':'var(--green)'};font-weight:500">${fmD(hwDist)}</span></td>
+      <td><div style="font-size:10px;font-weight:500;color:${batColor}">${hw==='online'?a.hwBat+'%':'—'}</div><div style="height:3px;background:var(--bg3);border-radius:2px;margin-top:2px;overflow:hidden"><div style="height:100%;width:${hw==='online'?a.hwBat:0}%;background:${batColor};transition:width .5s"></div></div></td>
+      <td>
+        <div style="display:flex;gap:3px;flex-wrap:wrap">
+          <button class="btn btn-d" style="padding:2px 5px;font-size:9px" onclick="swKill('${a.id}')" title="Matikan SW"><i class="ti ti-power" aria-hidden="true"></i></button>
+          <button class="btn btn-s" style="padding:2px 5px;font-size:9px" onclick="swWake('${a.id}')" title="Hidupkan SW"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+          <button class="btn btn-pu" style="padding:2px 5px;font-size:9px" onclick="hwToggle('${a.id}')" title="Toggle HW"><i class="ti ti-cpu" aria-hidden="true"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTimeline(){
+  const filter=document.getElementById('tl-filter').value;
+  const wrap=document.getElementById('tl-wrap');
+  const events=filter==='all'?tlEvents:tlEvents.filter(e=>e.msg.includes(filter));
+  if(!events.length){wrap.innerHTML='<div class="empty">Belum ada event</div>';return;}
+  wrap.innerHTML=`<div class="timeline">${events.map((e,i)=>{
+    const dc={theft:'tl-dot-off',lost:'tl-dot-off',oob:'tl-dot-warn',on:'tl-dot-on',info:'tl-dot-on',hw:'tl-dot-hw'};
+    const hasLine=i<events.length-1;
+    return`<div class="tl-item">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="tl-dot ${dc[e.type]||'tl-dot-on'}"></div>
+        ${hasLine?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">${e.msg}</div>
+        <div class="tl-sub">${e.sub}</div>
+        <div class="tl-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:10px"></i> ${e.t}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderSimDetail(){
+  const id=document.getElementById('sim-sel').value;
+  const a=assets.find(x=>x.id===id);
+  if(!a){document.getElementById('sim-detail').innerHTML='<div class="empty">Pilih asset</div>';return;}
+  const sw=swStatusOf(a),hw=hwStatusOf(a),thr=threatLevel(a);
+  const hwDist=HAV(a.regLat,a.regLng,a.hwLat,a.hwLng);
+  document.getElementById('sim-detail').innerHTML=`
+    <div class="layer-row">
+      <div class="layer-card lc-sw">
+        <div class="lc-title"><i class="ti ti-device-mobile" aria-hidden="true"></i> Software layer</div>
+        <div class="lc-row"><span class="lc-key">Status</span><span class="lc-val" style="color:${sw==='online'?'var(--green)':sw==='oob'?'var(--amber)':'var(--red)'}">${sw}</span></div>
+        <div class="lc-row"><span class="lc-key">Lat</span><span class="lc-val" style="color:var(--blue-tx)">${fmC(a.swLat)}</span></div>
+        <div class="lc-row"><span class="lc-key">Lng</span><span class="lc-val" style="color:var(--blue-tx)">${fmC(a.swLng)}</span></div>
+        <div class="lc-row"><span class="lc-key">Deviasi</span><span class="lc-val">${fmD(HAV(a.regLat,a.regLng,a.swLat,a.swLng))}</span></div>
+      </div>
+      <div class="layer-card lc-hw">
+        <div class="lc-title"><i class="ti ti-cpu" aria-hidden="true"></i> Hardware layer</div>
+        <div class="lc-row"><span class="lc-key">Status</span><span class="lc-val" style="color:${hw==='online'?'var(--purple)':'var(--red)'}">${hw}</span></div>
+        <div class="lc-row"><span class="lc-key">Lat</span><span class="lc-val" style="color:var(--purple-tx)">${fmC(a.hwLat)}</span></div>
+        <div class="lc-row"><span class="lc-key">Lng</span><span class="lc-val" style="color:var(--purple-tx)">${fmC(a.hwLng)}</span></div>
+        <div class="lc-row"><span class="lc-key">Battery</span><span class="lc-val" style="color:${a.hwBat>50?'var(--green)':a.hwBat>20?'var(--amber)':'var(--red)'}">${hw==='online'?a.hwBat+'%':'—'}</span></div>
+        <div class="lc-row"><span class="lc-key">Deviasi HW</span><span class="lc-val" style="color:${hwDist>100?'var(--red)':'var(--green)'}">${fmD(hwDist)}</span></div>
+      </div>
+    </div>
+    <div style="background:${thr==='theft'?'var(--red-bg)':thr==='lost'?'var(--red-bg)':thr==='oob'?'var(--amber-bg)':'var(--green-bg)'};border-radius:7px;padding:9px;border:0.5px solid ${thr==='theft'||thr==='lost'?'var(--red)':thr==='oob'?'var(--amber)':'var(--green)'}">
+      <div style="font-size:11px;font-weight:500;color:${thr==='theft'||thr==='lost'?'var(--red-tx)':thr==='oob'?'var(--amber-tx)':'var(--green-tx)'}">
+        ${thr==='theft'?'Possible theft — software offline, hardware still tracking':thr==='lost'?'Both layers offline — showing last known location':thr==='oob'?'Asset out of registered geofence':'All systems normal — dual layer active'}
+      </div>
+    </div>`;
+}
+
+function syncSelects(){
+  const opts=assets.map(a=>`<option value="${a.id}">${a.id} — ${a.name}</option>`).join('');
+  ['sim-sel','map-filter','tl-filter'].forEach(id=>{
+    const el=document.getElementById(id);
+    const prev=el.value;
+    const prefix=id==='sim-sel'?'':id==='map-filter'?'<option value="all">Semua asset</option>':'<option value="all">Semua asset</option>';
+    el.innerHTML=prefix+opts;
+    if(assets.find(a=>a.id===prev))el.value=prev;
+  });
+}
+
+function swKill(id){const a=assets.find(x=>x.id===id);if(!a)return;a.swStatus='offline';a.swLastSeen=Date.now()-HB_SW*1200;a.swHb=[...a.swHb.slice(1),0];pushLog('theft',`${id} — SW offline`,`Last SW: ${fmC(a.swLat)}, ${fmC(a.swLng)} | HW: ${hwStatusOf(a)==='online'?'still tracking':'offline'}`);playBeep();renderAll();}
+function swWake(id){const a=assets.find(x=>x.id===id);if(!a)return;a.swStatus='online';a.swLastSeen=Date.now();a.swHb=[...a.swHb.slice(1),1];pushLog('on',`${id} — SW back online`,'Heartbeat resumed');renderAll();}
+function hwToggle(id){const a=assets.find(x=>x.id===id);if(!a)return;if(hwStatusOf(a)==='online'){a.hwStatus='offline';pushLog('hw',`${id} — HW tracker offline`,`Battery exhausted or signal lost`);renderAll();}else{a.hwStatus='online';a.hwLastSeen=Date.now();pushLog('hw',`${id} — HW tracker active`,`Signal restored`);renderAll();}}
+
+function simSW(type){
+  const id=document.getElementById('sim-sel').value;if(!id)return;
+  if(type==='kill')swKill(id);
+  else if(type==='wake')swWake(id);
+  else if(type==='oob'){const a=assets.find(x=>x.id===id);if(!a)return;a.swLat=a.regLat+0.001;a.swLng=a.regLng+0.001;a.swStatus='online';a.swLastSeen=Date.now();pushLog('oob',`${id} — SW geofence breach`,`Deviasi: ${fmD(HAV(a.regLat,a.regLng,a.swLat,a.swLng))}`);renderAll();}
+  else if(type==='home'){const a=assets.find(x=>x.id===id);if(!a)return;a.swLat=a.regLat;a.swLng=a.regLng;a.swStatus='online';a.swLastSeen=Date.now();pushLog('on',`${id} — SW returned to home`,'Deviasi: 0m');renderAll();}
+}
+
+function simHW(type){
+  const id=document.getElementById('sim-sel').value;if(!id)return;
+  const a=assets.find(x=>x.id===id);if(!a)return;
+  if(type==='kill'){a.hwStatus='offline';pushLog('hw',`${id} — HW tracker battery dead`,'Hardware layer no longer transmitting');renderAll();}
+  else if(type==='move'){a.hwLat=a.regLat+0.002+Math.random()*0.003;a.hwLng=a.regLng+0.002+Math.random()*0.003;a.hwStatus='online';a.hwLastSeen=Date.now();pushLog('hw',`${id} — HW tracker moved`,`New HW pos: ${fmC(a.hwLat)}, ${fmC(a.hwLng)} | dist: ${fmD(HAV(a.regLat,a.regLng,a.hwLat,a.hwLng))}`);renderAll();}
+  else if(type==='wake'){a.hwStatus='online';a.hwLastSeen=Date.now();pushLog('hw',`${id} — HW tracker online`,`Signal resumed`);renderAll();}
+  else if(type==='home'){a.hwLat=a.regLat;a.hwLng=a.regLng;a.hwStatus='online';a.hwLastSeen=Date.now();pushLog('hw',`${id} — HW at home base`,'Deviasi: 0m');renderAll();}
+}
+
+function runScenario(type){
+  const a=assets[0];
+  if(type==='stolen'){
+    a.swStatus='offline';a.swLastSeen=Date.now()-HB_SW*1500;
+    a.hwLat=a.regLat+0.003;a.hwLng=a.regLng+0.004;a.hwStatus='online';a.hwLastSeen=Date.now();
+    pushLog('theft',`${a.id} — THEFT SCENARIO`,`SW killed, HW tracking at ${fmC(a.hwLat)}, ${fmC(a.hwLng)}`);
+    playBeep();
+  }else if(type==='findmy'){
+    a.swStatus='offline';a.swLastSeen=Date.now()-HB_SW*1500;
+    a.hwLat=a.regLat+0.001;a.hwLng=a.regLng+0.002;a.hwStatus='online';
+    pushLog('hw',`${a.id} — Find My simulation`,`SW offline, HW beacon at ${fmC(a.hwLat)}, ${fmC(a.hwLng)}`);
+  }else{
+    a.swStatus='offline';a.swLastSeen=Date.now()-HB_SW*1500;
+    a.hwStatus='offline';
+    pushLog('lost',`${a.id} — BOTH LAYERS OFFLINE`,`Last SW: ${fmC(a.swLat)}, ${fmC(a.swLng)}`);
+    playBeep();
+  }
+  sw('sim');
+  document.getElementById('sim-sel').value=a.id;
+  renderAll();
+}
+
+function askDel(){document.getElementById('del-box').className='del-confirm show';}
+function cancelDel(){document.getElementById('del-box').className='del-confirm';}
+function confirmDel(){
+  const id=document.getElementById('sim-sel').value;
+  const idx=assets.findIndex(a=>a.id===id);if(idx===-1)return;
+  const a=assets[idx];assets.splice(idx,1);
+  pushLog('info',`${id} removed from system`,`${a.name}`);
+  document.getElementById('del-box').className='del-confirm';
+  clearMap();renderAll();
+}
+function onSimChange(){
+  document.getElementById('del-box').className='del-confirm';
+  renderSimDetail();
+}
+
+function clearMap(){if(leafMap){leafMap.remove();leafMap=null;mapMarkers=[];}}
+
+function initMap(){
+  if(leafMap){clearMap();}
+  const center=assets.length?[assets[0].regLat,assets[0].regLng]:[-6.253266,106.864660];
+  leafMap=L.map('map-main',{zoomControl:true,attributionControl:false}).setView(center,14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(leafMap);
+  refreshMap();
+  setTimeout(()=>leafMap.invalidateSize(),80);
+}
+
+function refreshMap(){
+  if(!leafMap)return;
+  mapMarkers.forEach(m=>{try{leafMap.removeLayer(m);}catch(e){}});
+  mapMarkers=[];
+  const filter=document.getElementById('map-filter').value;
+  const list=filter==='all'?assets:assets.filter(a=>a.id===filter);
+  list.forEach(a=>{
+    const sw=swStatusOf(a),hw=hwStatusOf(a);
+    const gc=L.circle([a.regLat,a.regLng],{radius:100,color:sw==='oob'?'#ef9f27':'#3b6d11',fillColor:'#3b6d11',fillOpacity:0.04,weight:1,dashArray:'4,3'}).addTo(leafMap);
+    mapMarkers.push(gc);
+    const hIco=L.divIcon({html:`<div style="width:12px;height:12px;background:#185fa5;border:2px solid #85b7eb;border-radius:50%"></div>`,iconAnchor:[6,6],className:''});
+    const hm=L.marker([a.regLat,a.regLng],{icon:hIco}).addTo(leafMap).bindTooltip(`${a.id} home`,{permanent:false});
+    mapMarkers.push(hm);
+    if(sw!=='offline'||true){
+      const swColor=sw==='online'?'#3b6d11':sw==='oob'?'#854f0b':'#a32d2d';
+      const swIco=L.divIcon({html:`<div style="width:10px;height:10px;background:${swColor};border:2px solid #fff;border-radius:50%"></div>`,iconAnchor:[5,5],className:''});
+      const sm=L.marker([a.swLat,a.swLng],{icon:swIco}).addTo(leafMap).bindTooltip(`${a.id} SW — ${sw}`,{permanent:false,direction:'top'});
+      mapMarkers.push(sm);
+    }
+    if(hw==='online'||a.hwStatus==='offline'){
+      const hwColor=hw==='online'?'#7f77dd':'#888780';
+      const hwIco=L.divIcon({html:`<div style="width:11px;height:11px;background:${hwColor};border:2px solid #fff;border-radius:50%;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)"></div>`,iconAnchor:[5,5],className:''});
+      const hm2=L.marker([a.hwLat,a.hwLng],{icon:hwIco}).addTo(leafMap).bindTooltip(`${a.id} HW tracker — ${hw} | bat:${a.hwBat}%`,{permanent:false,direction:'top'});
+      mapMarkers.push(hm2);
+    }
+  });
+}
+
+function toggleTheme(){
+  isDark=!isDark;
+  document.getElementById('root').className=isDark?'dark':'';
+  document.getElementById('ticon').className=isDark?'ti ti-sun':'ti ti-moon';
+  document.getElementById('tlbl').textContent=isDark?'Light':'Dark';
+  if(leafMap)leafMap.invalidateSize();
+}
+
+function sw(name){
+  document.querySelectorAll('.view').forEach(v=>v.className='view');
+  document.querySelectorAll('.tab').forEach(t=>{t.className='tab';});
+  document.getElementById('view-'+name).className='view on';
+  document.getElementById('t-'+name).className='tab on';
+  if(name==='map'){setTimeout(()=>{if(!leafMap)initMap();else{leafMap.invalidateSize();refreshMap();}},60);}
+  if(name==='sim')renderSimDetail();
+  if(name==='timeline')renderTimeline();
+}
+
+function renderAll(){
+  renderMetrics();renderTable();renderLog();syncSelects();
+  if(document.getElementById('view-sim').classList.contains('on'))renderSimDetail();
+  if(document.getElementById('view-map').classList.contains('on'))refreshMap();
+  if(document.getElementById('view-timeline').classList.contains('on'))renderTimeline();
+}
+
+let audioCtx=null;
+function playBeep(){try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='square';o.frequency.value=880;g.gain.setValueAtTime(0.07,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.3);o.start();o.stop(audioCtx.currentTime+0.3);}catch(e){}}
+
+setInterval(()=>{
+  assets.forEach(a=>{if(a.swStatus==='online'){a.swLastSeen=Date.now();a.swHb=[...a.swHb.slice(1),1];}if(a.hwStatus==='online'){a.hwLastSeen=Date.now();if(a.hwBat>0)a.hwBat=Math.max(0,a.hwBat-0.01);}});
+  renderAll();
+},3000);
+setInterval(()=>{document.getElementById('clk').textContent=fmT();},1000);
+document.getElementById('clk').textContent=fmT();
+
+renderAll();
+pushLog('info','Dual-layer system initialized','SW agent + HW tracker monitoring active');
+pushLog('info','5 assets loaded with dual tracking','All layers nominal');
+</script>
